@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock
 import requests
 from io import StringIO
 import csv
-from main import get_divar_urls, fetch_product_details, save_to_csv  # Assuming your main code is in a file named app.py
+from divar_scraper import get_divar_urls, fetch_product_details, save_to_csv  # Assuming your main code is in a file named app.py
 
 class TestDivarApp(unittest.TestCase):
 
