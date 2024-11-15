@@ -21,10 +21,16 @@ This Python script allows users to crawl and retrieve product listings from Diva
 3. **Saving Data**: The product details are saved in a CSV file, with dynamic headers corresponding to unique product titles. If a title is missing for a product, `null` is placed in the CSV file.
 
 ## How to Use
+### Step 1: Clone Repository
 
-### Step 1: Set Parameters
+run the following command in terminal
+```
+git clone https://github.com/2077DevWave/divar_scraper.git
+```
 
-Set the following parameters in the script to customize the behavior:
+### Step 2: Set Parameters
+
+Set the following parameters in the script (divar_scraper.py) to customize the behavior:
 
 - **`search_query`**: The search term for products (e.g., `"207"` to find Peugeot 207 cars).
 - **`city_id`**: The city ID to search within (e.g., `"1"` for Tehran, `"38"` for Yasouj).
@@ -39,7 +45,7 @@ url_limit = 5                           # Set the number of URLs to crawl
 csv_file = "divar_product_details.csv"  # Name of the CSV file to save the product information
 ```
 
-### Step 2: Run the Script
+### Step 3: Run the Script
 
 Once the parameters are set, run the script:
 
