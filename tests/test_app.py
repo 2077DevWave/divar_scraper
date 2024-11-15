@@ -1,7 +1,7 @@
 import pytest
 import requests
 from unittest.mock import patch
-from app import get_divar_urls, fetch_product_details, extract_tag_from_url, save_to_csv
+from divar_scraper import get_divar_urls, fetch_product_details, extract_tag_from_url, save_to_csv
 
 # Mock the requests.get call to avoid making actual API requests during tests
 
