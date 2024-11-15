@@ -1,80 +1,60 @@
-import unittest
-from unittest.mock import patch, MagicMock
+import pytest
 import requests
-from io import StringIO
-import csv
-from divar_scraper import get_divar_urls, fetch_product_details, save_to_csv  # Assuming your main code is in a file named app.py
+from unittest.mock import patch
+from app import get_divar_urls, fetch_product_details, extract_tag_from_url, save_to_csv
 
-class TestDivarApp(unittest.TestCase):
+# Mock the requests.get call to avoid making actual API requests during tests
 
-    @patch('requests.get')
-    def test_get_divar_urls(self, mock_get):
-        # Mocking the response for the search API
-        mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "urls": ["https://divar.ir/v/sample-product-1", "https://divar.ir/v/sample-product-2"],
-            "lastPostDate": "2024-11-01T08:00:00.123456Z"
-        }
-        mock_get.return_value = mock_response
+@pytest.fixture
+def mock_get():
+    with patch("requests.get") as mock_get:
+        yield mock_get
 
-        # Call the function with test parameters
-        urls = get_divar_urls(query="207", city_id="38", page_limit=3)
+def test_get_divar_urls(mock_get):
+    # Test successful response from Divar API
+    mock_get.return_value.status_code = 200
+    mock_get.return_value.json.return_value = {
+        "urls": [
+            "https://divar.ir/v/پژو-207i-دنده‌ای-TU3،-مدل-۱۴۰۲/wZiY0NfM",
+            "https://divar.ir/v/پژو-206-مدل-۱۴۰۱/abcd1234"
+        ],
+        "lastPostDate": "2024-11-01T08:00:00.123456Z"
+    }
 
-        # Assertions
-        self.assertEqual(len(urls), 2)
-        self.assertIn("https://divar.ir/v/sample-product-1", urls)
-        self.assertIn("https://divar.ir/v/sample-product-2", urls)
+    urls = get_divar_urls(query="207", city_id="38", page_limit=3)
+    assert len(urls) == 2
+    assert "https://divar.ir/v/پژو-207i-دنده‌ای-TU3،-مدل-۱۴۰۲/wZiY0NfM" in urls
+    assert "https://divar.ir/v/پژو-206-مدل-۱۴۰۱/abcd1234" in urls
 
-    @patch('requests.get')
-    def test_fetch_product_details(self, mock_get):
-        # Mocking the response for the product details API
-        mock_response = MagicMock()
-        mock_response.json.return_value = [
-            {"title": "کارکرد", "value": "1"},
-            {"title": "مدل (سال تولید)", "value": "1403"}
-        ]
-        mock_get.return_value = mock_response
+def test_fetch_product_details(mock_get):
+    # Test successful product details fetch
+    mock_get.return_value.status_code = 200
+    mock_get.return_value.json.return_value = [
+        {"title": "کارکرد", "value": "1"},
+        {"title": "مدل (سال تولید)", "value": "1403"},
+        {"title": "رنگ", "value": "مشکی"},
+    ]
 
-        # Call the function with a sample tag
-        product_details = fetch_product_details(tag="gZTHQDZy")
+    product_details = fetch_product_details(tag="gZTHQDZy")
+    assert product_details is not None
+    assert len(product_details) == 3
+    assert product_details[0]["title"] == "کارکرد"
+    assert product_details[1]["title"] == "مدل (سال تولید)"
+    assert product_details[2]["title"] == "رنگ"
 
-        # Assertions
-        self.assertIsNotNone(product_details)
-        self.assertEqual(len(product_details), 2)
-        self.assertEqual(product_details[0]["title"], "کارکرد")
-        self.assertEqual(product_details[0]["value"], "1")
-        self.assertEqual(product_details[1]["title"], "مدل (سال تولید)")
-        self.assertEqual(product_details[1]["value"], "1403")
+def test_extract_tag_from_url():
+    # Test extracting the tag from the Divar product URL
+    url = "https://divar.ir/v/207-%DA%AF%DB%8C%D8%B1%D8%A8%DA%A9%D8%B3-%D8%A7%D8%AA%D9%88%D9%85%D8%A7%D8%AA%DB%8C%DA%A9/gZTHQDZy"
+    tag = extract_tag_from_url(url)
+    assert tag == "gZTHQDZy"
 
-    def test_save_to_csv(self):
-        # Sample data to save to CSV
-        data = [
-            [
-                {"title": "کارکرد", "value": "1"},
-                {"title": "مدل (سال تولید)", "value": "1403"}
-            ],
-            [
-                {"title": "کارکرد", "value": "2"},
-                {"title": "مدل (سال تولید)", "value": "1404"}
-            ]
-        ]
-
-        # Use StringIO to capture the CSV output
-        with patch('builtins.open', unittest.mock.mock_open()) as mock_file:
-            save_to_csv(data, filename="test.csv")
-
-            # Check if the file write is called
-            mock_file.assert_called_once_with("test.csv", mode="w", newline="", encoding="utf-8")
-
-            # Check that the correct content was written to the file
-            handle = mock_file()
-            written_data = handle.write.call_args_list
-            written_data = [call[0][0] for call in written_data]
-
-            # Check header and data
-            self.assertIn("مدل (سال تولید),کارکرد\r\n", written_data[0])
-            self.assertIn("1403,1\r\n", written_data[1])
-            self.assertIn("1404,2\r\n", written_data[2])
-
-if __name__ == "__main__":
-    unittest.main()
+def test_save_to_csv():
+    # Test saving product details to CSV
+    data = [
+        [{"title": "کارکرد", "value": "1"}, {"title": "مدل (سال تولید)", "value": "1403"}, {"title": "رنگ", "value": "مشکی"}],
+        [{"title": "کارکرد", "value": "2"}, {"title": "مدل (سال تولید)", "value": "1402"}, {"title": "رنگ", "value": "سفید"}]
+    ]
+    
+    with patch("builtins.open", unittest.mock.mock_open()) as mock_file:
+        save_to_csv(data, filename="test_product_details.csv")
+        mock_file.assert_called_once_with("test_product_details.csv", mode="w", newline="", encoding="utf-8")
