@@ -1,5 +1,6 @@
 import pytest
 import requests
+import unittest
 from unittest.mock import patch
 from divar_scraper import get_divar_urls, fetch_product_details, extract_tag_from_url, save_to_csv
 
