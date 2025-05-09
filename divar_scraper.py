@@ -23,7 +23,7 @@ def get_divar_urls(query, city_id="1", page_limit=3, initial_last_post_date=None
             data = response.json()
             if "urls" in data:
                 urls.extend(data["urls"])
-                print(f"Page {page}: Retrieved {len(data['urls'])} URLs")
+                if not silent_mode : print(f"Page {page}: Retrieved {len(data['urls'])} URLs")
             else:
                 print(f"Page {page}: No URLs found.")
                 break
@@ -32,7 +32,8 @@ def get_divar_urls(query, city_id="1", page_limit=3, initial_last_post_date=None
             if not last_post_date:
                 print("No further results available.")
                 break
-
+            if silent_mode : print(f"Page url Retrieved: {page+1}/{(page_limit//50) + min(1, page_limit % 50)} of pages with {len(urls)} urls...",end="\r")
+            
         return urls
 
     except requests.exceptions.RequestException as e:
@@ -82,33 +83,39 @@ def main():
 
     for url in urls:
         tag = extract_tag_from_url(url)
-        print(f"\nFetching details for tag: {tag}")
+        if not silent_mode : print(f"\nFetching details for tag: {tag}")
         product = fetch_product_details(tag)
         if product:
             buffer.append(product)
             for item in product:
                 all_titles.add(item.get("title", ""))
-            print(f"Details for {tag} fetched.")
+            if not silent_mode :
+              print(f"Details for {tag} fetched.")
         else:
             print(f"Failed for {tag}.")
 
         counter += 1
+        if silent_mode : print(f"\rfetched {counter}/{len(urls)} and saved {counter - (counter%save_partition_size)}/{len(urls)} of urls...", end="")
 
-        if counter % 10 == 0 or counter == len(urls):
+        if counter % save_partition_size == 0 or counter == len(urls):
             sorted_titles = sorted(all_titles)
             save_to_csv(buffer, csv_file, sorted_titles, write_header=write_header)
             buffer = []
             write_header = False
-            print(f"Saved {counter} items to {csv_file}.")
+            if not silent_mode:
+              print(f"Saved {counter} items to {csv_file}.")
+              
 
 # Example Usage
 if __name__ == "__main__":
-    global search_query,city_id,url_limit,csv_file
+    global search_query,city_id,url_limit,csv_file,silent_mode,save_partition_size
     ################################## Set this parameters only ###############################################
     search_query = "207"                    # Change this query as needed
     city_id = "1"                           # Optional: Specify a different city ID if desired (38=yasouj , 1=tehran)
-    url_limit = 100000                       # how many url you want to crawel
+    url_limit = 100                       # how many url you want to crawel
     csv_file = "divar_product_details.csv"  # where to save product information
+    save_partition_size = 20
+    silent_mode = True
     ###########################################################################################################
 
     main()
