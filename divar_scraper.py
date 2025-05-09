@@ -67,7 +67,7 @@ def save_to_csv(data, filename, unique_titles, write_header=False):
             writer.writerow(row)
 
 def main():
-    url_limit += ((url_limit*2)/100)  # add 2% fault page
+    url_limit += ((url_limit*2)//100)  # add 2% fault page
     page_limit = int(url_limit / 20) + min(1, url_limit % 20)
     urls = get_divar_urls(query=search_query, city_id=city_id, page_limit=page_limit)
     urls = urls[0:min(len(urls), url_limit)]
