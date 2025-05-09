@@ -32,7 +32,7 @@ def get_divar_urls(query, city_id="1", page_limit=3, initial_last_post_date=None
             if not last_post_date:
                 print("No further results available.")
                 break
-            if silent_mode : print(f"Page url Retrieved: {page+1}/{(page_limit//50) + min(1, page_limit % 50)} of pages with {len(urls)} urls...",end="\r")
+            if silent_mode : print(f"\rPage url Retrieved: {page+1}/{(page_limit//50) + min(1, page_limit % 50)} of pages with {len(urls)} urls...",end="")
             
         return urls
 
@@ -112,9 +112,9 @@ if __name__ == "__main__":
     ################################## Set this parameters only ###############################################
     search_query = "207"                    # Change this query as needed
     city_id = "1"                           # Optional: Specify a different city ID if desired (38=yasouj , 1=tehran)
-    url_limit = 100                       # how many url you want to crawel
+    url_limit = 85000                       # how many url you want to crawel
     csv_file = "divar_product_details.csv"  # where to save product information
-    save_partition_size = 20
+    save_partition_size = 1000
     silent_mode = True
     ###########################################################################################################
 
